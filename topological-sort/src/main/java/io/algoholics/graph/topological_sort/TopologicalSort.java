@@ -49,9 +49,9 @@ public class TopologicalSort {
     public <V> boolean isTopologicalSort(DirectedGraph<V> dag, List<V> sorted) {
         assertCompatible(dag, sorted);
 
-        final Map<V, Integer> positions = mapVerticesPositions(sorted);
+        final Positions<V> pos = new Positions<>(sorted);
 
-        return dag.getAdjacencyList().entrySet().stream().allMatch(e -> allSourcesBeforeTargets(e.getKey(), e.getValue(), positions));
+        return dag.getAdjacencyList().entrySet().stream().allMatch(e -> pos.position(e.getKey()).comesBefore(pos.positions(e.getValue())));
     }
 
     private <V> void assertCompatible(DirectedGraph<V> dag, List<V> sorted) {
@@ -64,17 +64,21 @@ public class TopologicalSort {
     }
 
     private static final class Positions<V> {
-        private final Map<V, Integer> positions;
+        private final Map<V, Integer> pos;
 
         public Positions(List<V> sorted) {
-            this.positions = new HashMap<>();
+            this.pos = new HashMap<>();
             for (int i = 0; i < sorted.size(); i++) {
-                positions.put(sorted.get(i), i);
+                pos.put(sorted.get(i), i);
             }
         }
 
-        public Position getPosition(V vertex) {
-            return new Position(positions.get(vertex));
+        public Position position(V vertex) {
+            return new Position(pos.get(vertex));
+        }
+
+        public List<Position> positions(List<V> vertices) {
+            return vertices.stream().map(this::position).collect(Collectors.toList());
         }
     }
 
@@ -92,21 +96,5 @@ public class TopologicalSort {
         public boolean comesBefore(List<Position> positions) {
             return positions.stream().allMatch(this::comesBefore);
         }
-    }
-
-    private <V> Map<V, Integer> mapVerticesPositions(List<V> sorted) {
-        final Map<V, Integer> positions = new HashMap<>();
-        for (int i = 0; i < sorted.size(); i++) {
-            positions.put(sorted.get(i), i);
-        }
-        return positions;
-    }
-
-    private <V> boolean allSourcesBeforeTargets(V source, List<V> adjacentVertices, Map<V, Integer> positions) {
-        return adjacentVertices.stream().allMatch(target -> isSourceBeforeTarget(source, target, positions));
-    }
-
-    private <V> boolean isSourceBeforeTarget(V source, V target, Map<V, Integer> positions) {
-        return positions.get(target) - positions.get(source) > 0;
     }
 }
