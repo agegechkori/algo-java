@@ -5,7 +5,7 @@ package io.algoholics.graph.topological_sort
 
 import spock.lang.Specification
 
-class AppTest extends Specification {
+class TopologicalSortTest extends Specification {
     def "topological sort on a connected graph"() {
         setup:
         def sort = new TopologicalSort()
@@ -24,13 +24,13 @@ class AppTest extends Specification {
         def sorted = sort.sort(dag)
 
         then:
-        sort.isTopologicalSort(dag, sorted) == true
+        sort.isTopologicalSort(dag, sorted)
 
         when:
         def sortedWrong = [5, 7, 11, 8, 2, 10, 9, 3]
 
         then:
-        sort.isTopologicalSort(dag, sortedWrong) == false
+        !sort.isTopologicalSort(dag, sortedWrong)
     }
 
     def "is topological sort"() {
@@ -45,7 +45,7 @@ class AppTest extends Specification {
         def sorted = [1, 2, 3, 4]
 
         then:
-        sort.isTopologicalSort(dag, sorted) == true
+        sort.isTopologicalSort(dag, sorted)
 
         when:
         def sortedEx1 = [1, 2, 3, 4, 4]
@@ -65,7 +65,7 @@ class AppTest extends Specification {
         def sortedFalse = [1, 2, 4, 3]
 
         then:
-        sort.isTopologicalSort(dag, sortedFalse) == false
+        !sort.isTopologicalSort(dag, sortedFalse)
     }
 
 }
