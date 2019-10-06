@@ -14,17 +14,16 @@ public class TopologicalSort {
 
     public <V> List<V> sort(final DirectedGraph<V> dag) {
         final DirectedGraph<V> graph = new DirectedGraph<>(dag);
-        final Map<V, Integer> indegrees = graph.getIndegrees();
-        final Queue<V> sources = getSourceVertices(indegrees);
+        final Queue<V> sources = new LinkedList<>(graph.getSources());
 
-        final List<V> sorted = new ArrayList<>(indegrees.size());
+        final List<V> sorted = new ArrayList<>(graph.size());
 
         while(!sources.isEmpty()) {
             final V vertex = sources.remove();
             sorted.add(vertex);
-            final List<V> adjacentVertices = graph.remove(vertex);
+            final List<V> adjacentVertices = graph.removeSource(vertex);
             for (final V adjacent : adjacentVertices) {
-                if (hasZeroIndegree(adjacent, indegrees)) {
+                if (graph.getIndegree(adjacent) == 0) {
                     sources.add(adjacent);
                 }
             }
@@ -35,15 +34,6 @@ public class TopologicalSort {
         }
 
         return sorted;
-    }
-
-    private <V> boolean hasZeroIndegree(V adjacent, final Map<V, Integer> indegrees) {
-        return indegrees.compute(adjacent, (k, v) -> (--v == 0) ? null : v) == null;
-    }
-
-    private <V> Queue<V> getSourceVertices(final Map<V, Integer> indegrees) {
-        final List<V> list = indegrees.entrySet().stream().filter(e -> e.getValue() == 0).map(e -> e.getKey()).collect(Collectors.toList());
-        return new LinkedList<>(list);
     }
 
     public <V> boolean isTopologicalSort(DirectedGraph<V> dag, List<V> sorted) {
@@ -66,18 +56,18 @@ public class TopologicalSort {
     private static final class Positions<V> {
         private final Map<V, Integer> pos;
 
-        public Positions(List<V> sorted) {
+        Positions(List<V> sorted) {
             this.pos = new HashMap<>();
             for (int i = 0; i < sorted.size(); i++) {
                 pos.put(sorted.get(i), i);
             }
         }
 
-        public Position position(V vertex) {
+        Position position(V vertex) {
             return new Position(pos.get(vertex));
         }
 
-        public List<Position> positions(List<V> vertices) {
+        List<Position> positions(List<V> vertices) {
             return vertices.stream().map(this::position).collect(Collectors.toList());
         }
     }
@@ -89,11 +79,11 @@ public class TopologicalSort {
             this.index = index;
         }
 
-        public boolean comesBefore(Position that) {
+        boolean comesBefore(Position that) {
             return that.index - this.index > 0; 
         }
 
-        public boolean comesBefore(List<Position> positions) {
+        boolean comesBefore(List<Position> positions) {
             return positions.stream().allMatch(this::comesBefore);
         }
     }

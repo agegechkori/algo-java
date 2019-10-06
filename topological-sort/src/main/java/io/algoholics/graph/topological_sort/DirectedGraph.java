@@ -5,12 +5,20 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DirectedGraph<V> {
     private final Map<V, List<V>> adjacencyList;
+    private final Map<V, Integer> indegrees;
 
     public DirectedGraph(Map<V, List<V>> adjacencyList) {
         this.adjacencyList = adjacencyList;
+        this.indegrees = new HashMap<>();
+
+        adjacencyList.forEach((k, v) -> {
+            indegrees.putIfAbsent(k, 0);
+            v.forEach(e -> indegrees.merge(e, 1, Integer::sum));
+        });
     }
 
     public DirectedGraph(DirectedGraph<V> graph) {
@@ -25,29 +33,41 @@ public class DirectedGraph<V> {
         final List<V> adjacentVertices = adjacencyList.getOrDefault(source, new ArrayList<>());
         adjacentVertices.add(target);
         adjacencyList.put(source, adjacentVertices);
+        indegrees.putIfAbsent(source, 0);
+        indegrees.merge(target, 1, Integer::sum);
     }
 
     public List<V> getAdjacentVertices(V vertex) {
         return new ArrayList<>(adjacencyList.get(vertex));
     }
 
-    public Map<V, Integer> getIndegrees() {
-        final Map<V, Integer> indegree = new HashMap<>();
-
-        adjacencyList.forEach((k, v) -> {
-            indegree.putIfAbsent(k, 0);
-            v.forEach(e -> indegree.merge(e, 1, (prev, one) -> prev + one));
-        });
-        return indegree;
-    }
-
     public List<V> getVertices() {
-        return new ArrayList<>(getIndegrees().keySet());
+        return new ArrayList<>(indegrees.keySet());
     }
 
-    public List<V> remove(V vertex) {
+    public List<V> removeSource(V vertex) {
+        if (indegrees.get(vertex) != 0) {
+            throw new IllegalArgumentException("Cannot remove a vertex with a non-zero indegree");
+        }
+        indegrees.remove(vertex);
         final List<V> adjacentVertices = adjacencyList.remove(vertex);
-        return adjacentVertices != null ?  adjacentVertices : Collections.emptyList();
+        if (adjacentVertices == null) {
+            return Collections.emptyList();
+        }
+        adjacentVertices.forEach(v -> indegrees.put(v, indegrees.get(v) - 1));
+        return adjacentVertices;
+    }
+
+    public int getIndegree(V vertex) {
+        return indegrees.get(vertex);
+    }
+
+    public int size() {
+        return indegrees.size();
+    }
+
+    public List<V> getSources() {
+        return indegrees.entrySet().stream().filter(e -> e.getValue() == 0).map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
     public boolean isEmpty() {
