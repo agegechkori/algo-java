@@ -49,12 +49,12 @@ public class DisjointSet<T> {
         return find(element1) == find(element2);
     }
 
-    public void union(T element1, T element2) {
+    public boolean union(T element1, T element2) {
         final T rootElement1 = find(element1);
         final T rootElement2 = find(element2);
 
         if (rootElement1 == rootElement2)
-            return;
+            return false;
 
         if (heights.get(rootElement1) < heights.get(rootElement2)) {
             parents.put(rootElement1, rootElement2);
@@ -66,5 +66,6 @@ public class DisjointSet<T> {
         }
 
         count--;
+        return true;
     }
 }

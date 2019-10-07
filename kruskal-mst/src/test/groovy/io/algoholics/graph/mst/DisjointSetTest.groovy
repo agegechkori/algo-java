@@ -19,11 +19,15 @@ class DisjointSetTest extends Specification {
 
     def "test simple union"() {
         when:
-        uf.union(0, 1)
+        def result = uf.union(0, 1)
 
         then:
+        result
         uf.connected(0, 1)
         uf.getCount() == oldCount - 1
+
+        expect:
+        !uf.union(0, 1)
     }
 
     def "test several unions"() {
